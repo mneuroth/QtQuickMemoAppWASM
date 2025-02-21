@@ -8,10 +8,10 @@
       "type": "image/png"
     }
   ],
-  "start_url": "/QtQuickMemoApp.html",
+  "start_url": "/QtQuickMemoApp/QtQuickMemoApp.html",
   "display": "standalone",
   "background_color": "#000000",
   "description": "PWA for QtQuickMemo",
-  "scope": "/",
+  "scope": "/QtQuickMemoApp/",
   "theme_color": "#000000"
 }
