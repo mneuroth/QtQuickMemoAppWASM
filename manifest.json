@@ -1,0 +1,17 @@
+{
+  "name": "QtQuickMemoApp",
+  "short_name": "QtQuickMemo",
+  "icons": [
+    {
+      "src": "QtQuickMemo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/QtQuickMemoApp.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "description": "PWA for QtQuickMemo",
+  "scope": "/",
+  "theme_color": "#000000"
+}

@@ -9,6 +9,125 @@
         and Qt device independent pixels. -->
     <meta name="viewport" content="width=device-width, height=device-height, user-scalable=0"/>
 
+	<link rel="manifest" href="manifest.json">
+
+	<script>
+		var Module = null;
+
+		// *** some generic code for PWA support ***
+		
+        if ('serviceWorker' in navigator) {
+			console.log("Found serviceWorker!")
+            navigator.serviceWorker.register('sw.js')
+            .then(registration => {
+                console.log('Service Worker registered with scope:', registration.scope);
+				console.log(registration)
+            })
+            .catch(error => {
+                console.log('Service Worker registration failed:', error);
+				console.log(error)
+            });
+        } else {
+			console.log("Found NO serviceWorker !!!")
+		}
+		
+		// *** some application code for PWA support ***
+
+		function triggerLoadBinaryData() {
+			var binaryString;
+			var promisResult = loadData("sqlitedb");
+			promisResult.then(result => {
+				binaryString = result;
+				if (binaryString === undefined) {
+					return; // "";
+				}
+				
+				var asciiString = btoa(binaryString);
+				const lengthBytes = Module.lengthBytesUTF8(asciiString) + 1;
+				const stringOnWasmHeap = Module._malloc(lengthBytes);
+				Module.stringToUTF8(asciiString, stringOnWasmHeap, lengthBytes);
+				Module._receiveBinaryStringAsBase64(stringOnWasmHeap);
+				Module._free(stringOnWasmHeap);
+				
+				return; // asciiString;
+			}).catch(error => {
+				console.log("CATCH loadBin() "+error);
+				return; // "";
+			});			
+		}
+		
+        // JavaScript-Funktion zum Empfangen und Dekodieren der binären Daten
+        function processBinaryDataViaBase64(encodedString) {
+			var  binaryString = atob(encodedString);
+			saveData("sqlitedb", binaryString)
+        }
+		
+		/* for debugging only, see below
+		function sendStringToWasm() {
+            const inputString = document.getElementById('inputText').value;
+            const lengthBytes = Module.lengthBytesUTF8(inputString) + 1;
+            const stringOnWasmHeap = Module._malloc(lengthBytes);
+            Module.stringToUTF8(inputString, stringOnWasmHeap, lengthBytes);
+            Module._receiveString(stringOnWasmHeap);           
+            Module._free(stringOnWasmHeap);
+        }
+		*/
+					
+		// *** code for interacting with IndexDB ***
+					
+		const dbName = 'quickmemodb';
+		const storeName = 'sqlite_data';
+
+		function openDB() {
+			return new Promise((resolve, reject) => {
+				const request = indexedDB.open(dbName, 1);
+				request.onupgradeneeded = event => {
+					const db = event.target.result;
+					db.createObjectStore(storeName);
+				};
+				request.onsuccess = event => {
+					resolve(event.target.result);
+				};
+				request.onerror = event => {
+					reject(event.target.error);
+				};
+			});
+		}
+
+		function saveData(key, data) {
+			return openDB().then(db => {
+				return new Promise((resolve, reject) => {
+					const transaction = db.transaction(storeName, 'readwrite');
+					const store = transaction.objectStore(storeName);
+					const request = store.put(data, key);
+					request.onsuccess = () => {
+						resolve();
+					};
+					request.onerror = event => {
+						reject(event.target.error);
+					};
+				});
+			});
+		}
+
+		function loadData(key) {
+			return openDB().then(db => {
+				return new Promise((resolve, reject) => {
+					const transaction = db.transaction(storeName, 'readonly');
+					const store = transaction.objectStore(storeName);
+					const request = store.get(key);
+					request.onsuccess = event => {
+						resolve(event.target.result);
+					};
+					request.onerror = event => {
+						reject(event.target.error);
+					};
+				});
+			});
+		}
+
+	</script>
+
     <title>QtQuickMemoApp</title>
     <style>
       /* Make the html body cover the entire (visual) viewport with no scroll bars. */
@@ -17,6 +136,15 @@
     </style>
   </head>
   <body onload="init()">
+<!-- for debugging only:	
+	<p>
+		<textarea id="debugTextArea" style="width:400px;height:200px;"></textarea>
+	</p>
+	<p>
+		<input type="text" id="inputText" onkeydown="if(event.keyCode==13)sendStringToWasm();"/>
+		<button onClick="sendStringToWasm();">Send</button>
+	</p>
+-->	
     <figure style="overflow:visible;" id="qtspinner">
       <center style="margin-top:1.5em; line-height:150%">
         <img src="qtlogo.svg" width="320" height="200" style="display:block"></img>
@@ -26,6 +154,16 @@
       </center>
     </figure>
     <div id="screen"></div>
+
+<!-- for debugging only:	
+	<script type="text/javascript">
+	var debugTextArea = document.getElementById("debugTextArea");
+	function debug(message) {
+		debugTextArea.value += message + "\n";
+		debugTextArea.scrollTop = debugTextArea.scrollHeight;
+	}	
+	</script>
+-->	
 
     <script type="text/javascript">
         async function init()
@@ -62,6 +200,9 @@
                         
                     }
                 });
+				// *** PATCH ***
+				// save Module instance in global variable
+				Module = instance;
             } catch (e) {
                 console.error(e);
                 console.error(e.stack);
