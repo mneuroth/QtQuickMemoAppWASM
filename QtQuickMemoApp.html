@@ -18,15 +18,34 @@
 		
         if ('serviceWorker' in navigator) {
 			console.log("Found serviceWorker!")
-            navigator.serviceWorker.register('/QtQuickMemoAppWASM/sw.js')
+            navigator.serviceWorker.register('sw.js')
             .then(registration => {
                 console.log('Service Worker registered with scope:', registration.scope);
 				console.log(registration)
+				
+				registration.onupdatefound = () => {
+					console.log("### OnUpdateFound ...")
+					const newWorker = registration.installing;
+					newWorker.onstatechange = () => {
+						if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+							console.log("### Neue Version verfügbar! Wird beim nächsten Neustart geladen.");
+							localStorage.setItem("newVersionAvailable", "true");
+						}
+					};
+				};
+
             })
             .catch(error => {
                 console.log('Service Worker registration failed:', error);
 				console.log(error)
             });
+			
+			// Optional: Zeige dem Nutzer eine Nachricht, wenn eine neue Version bereitsteht
+			if (localStorage.getItem("newVersionAvailable") === "true") {
+				alert("Eine neue Version ist verfügbar. Bitte starte die App neu.");
+				localStorage.removeItem("newVersionAvailable");
+			}
+	
         } else {
 			console.log("Found NO serviceWorker !!!")
 		}
