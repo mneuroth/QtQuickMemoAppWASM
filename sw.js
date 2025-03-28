@@ -1,4 +1,4 @@
-const CACHE_NAME = 'qtquickmemo-v0.90.8.0';
+const CACHE_NAME = 'qtquickmemo-v0.90.8.1';
 
 const neverCacheUrls = [/\/connect_client/, /\/disconnect_client/, /\/get_all_memos/, /\/insert_update_memo/, /\/delete_memo/, /\/client_ping/, /\/get_database/, /\/get_synced_database/, /\/get_file/];
 
