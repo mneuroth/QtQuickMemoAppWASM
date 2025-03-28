@@ -1,4 +1,6 @@
-const CACHE_NAME = 'qtquickmemo-v0.90.7';
+const CACHE_NAME = 'qtquickmemo-v0.90.8.0';
+
+const neverCacheUrls = [/\/connect_client/, /\/disconnect_client/, /\/get_all_memos/, /\/insert_update_memo/, /\/delete_memo/, /\/client_ping/, /\/get_database/, /\/get_synced_database/, /\/get_file/];
 
 self.addEventListener('install', event => {
     console.log('>>> Service Worker for QtQuickMemoApp installing...'+event)
@@ -84,6 +86,10 @@ self.addEventListener('fetch', event => {
             .then(response => response || fetch(event.request))
     )
 */
+    if (neverCacheUrls.some((pattern) => pattern.test(event.request.url))) {
+        // Überspringen Sie das Caching für diese URLs
+        return;
+    }
 
 	event.respondWith(
         fetch(event.request).then(response => {
