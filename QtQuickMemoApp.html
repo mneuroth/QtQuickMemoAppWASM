@@ -16,12 +16,12 @@
 
 		// *** some generic code for PWA support ***
 		
-        if ('serviceWorker' in navigator) {
-			console.log("Found serviceWorker!")
+        if (('serviceWorker' in navigator) && isSupportServiceWorker()) {
+			console.log("### Found serviceWorker!")
             navigator.serviceWorker.register('sw.js')
             .then(registration => {
-                console.log('Service Worker registered with scope:', registration.scope);
-				console.log(registration)
+                console.log('### Service Worker registered with scope:', registration.scope);
+				//console.log(registration)
 				
 				registration.onupdatefound = () => {
 					console.log("### OnUpdateFound ...")
@@ -36,7 +36,7 @@
 
             })
             .catch(error => {
-                console.log('Service Worker registration failed:', error);
+                console.log('### Service Worker registration failed:', error);
 				console.log(error)
             });
 			
@@ -47,9 +47,23 @@
 			}
 	
         } else {
-			console.log("Found NO serviceWorker !!!")
+			console.log("### Found NO serviceWorker or serviceWorker disabled !!!")
 		}
 		
+		// *** some settings functions ***
+		
+		function isSupportChangeContent() {
+			return /*__RVCC_START__*/0/*__RVCC_END__*/;
+		}
+
+		function isSupportServiceWorker() {
+			return /*__RVSW_START__*/0/*__RVSW_END__*/;
+		}
+
+		function isSupportDatabaseIO() {
+			return /*__RVDB_START__*/0/*__RVDB_END__*/;
+		}
+
 		// *** some application code for PWA support ***
 
 		function triggerLoadBinaryData() {
